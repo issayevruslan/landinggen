@@ -1,0 +1,43 @@
+name: Deploy Studio to Vercel
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/studio/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "package-lock.json"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Build and deploy (Studio)
+        working-directory: apps/studio
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_STUDIO_PROJECT_ID }}
+          NEXT_PUBLIC_GA_ID: ${{ secrets.NEXT_PUBLIC_GA_ID }}
+          NEXT_PUBLIC_GTM_ID: ${{ secrets.NEXT_PUBLIC_GTM_ID }}
+          API_INTERNAL_URL: ${{ secrets.API_INTERNAL_URL }}
+          GEN_INTERNAL_URL: ${{ secrets.GEN_INTERNAL_URL }}
+          PDF_INTERNAL_URL: ${{ secrets.PDF_INTERNAL_URL }}
+        run: |
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel build --prod --token=$VERCEL_TOKEN
+          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+
