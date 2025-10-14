@@ -1,0 +1,48 @@
+{
+  "campaignObjective": "lead_gen | sales | signup",
+  "primaryConversionKpi": "e.g., 5% sign-ups",
+  "targetAudienceDescription": "Role, industry, pain points",
+  "buyerPersonaKeywords": ["finance leaders", "MENA", "SMB"],
+  "productOrServiceName": "",
+  "primaryOffer": "",
+  "uniqueValueProposition": "",
+  "topBenefits": ["", "", ""],
+  "featureList": ["", "", ""],
+  "emotionalTriggers": ["trust", "urgency"],
+  "objectionsToOvercome": ["", ""],
+  "testimonials": [{"quote": "", "author": "", "role": ""}],
+  "trustIndicators": [{"type": "badge", "label": "ISO 27001"}],
+  "primaryCtaText": "Get started",
+  "secondaryCtaText": "Learn more",
+  "form": {
+    "fields": [
+      {"name": "fullName", "label": "Full name", "type": "text", "required": true},
+      {"name": "email", "label": "Work email", "type": "email", "required": true},
+      {"name": "company", "label": "Company", "type": "text", "required": false}
+    ],
+    "method": "POST",
+    "endpoint": "/api/forms/submit",
+    "successRedirect": "/thank-you"
+  },
+  "heroImageUrl": "",
+  "secondaryImages": [""],
+  "videoUrl": "",
+  "toneOfVoice": "formal | friendly | playful",
+  "brandColorPalette": ["#0033A0", "#00A3E0", "#111111", "#FFFFFF"],
+  "fontStyleGuide": {"heading": "Inter", "body": "Inter"},
+  "logoUrl": "",
+  "pageLayoutPreference": "modular | storytelling | single_scroll",
+  "targetSeoKeywords": [""],
+  "eventTrackingSetup": ["cta_click", "form_submit"],
+  "analytics": {"gaMeasurementId": "G-TR3V41RH39", "gtmContainerId": "GTM-NLC7RRTH"},
+  "privacyPolicyUrl": "https://example.com/privacy",
+  "consentText": "I agree to receive communications per the Privacy Policy.",
+  "historicDataRefs": {
+    "campaignId": "",
+    "dateRange": "2025-05-10..2025-08-10",
+    "abExperimentIds": [""],
+    "landingPageId": ""
+  }
+}
+
+

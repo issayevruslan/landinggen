@@ -1,0 +1,14 @@
+{
+  "name": "cso-pdf",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pdfkit": "^0.15.0"
+  }
+}
+
+
