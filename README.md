@@ -7,8 +7,8 @@ End-to-end stack to generate, explain, and publish brand-compliant landing pages
 - Docker & Docker Compose
 - An existing NPM stack on the external Docker network `npm_web` (192.168.11.0/24)
 - DNS pointing to your server for:
-  - studio.cso.ae, api.cso.ae, gen.cso.ae, lp.cso.ae, track.cso.ae, assets.cso.ae
-  - wildcard: *.lp.cso.ae → CNAME to lp.cso.ae (or A if your DNS requires)
+  - studio.<your-domain>, api.<your-domain>, gen.<your-domain>, lp.<your-domain>, track.<your-domain>, assets.<your-domain>
+  - wildcard: *.lp.<your-domain> → CNAME to lp.<your-domain> (or A if your DNS requires)
 
 ## 1) Clone & Configure
 
@@ -22,7 +22,7 @@ cp -n .env.example .env || true
 vim .env
 ```
 
-Important `.env` keys:
+Important `.env` keys (examples only; do not commit secrets):
 - Domain/hosts: DOMAIN, STUDIO_HOST, API_HOST, GEN_HOST, LP_HOST, TRACK_HOST, ASSETS_HOST
 - Secrets: JWT_SECRET, NEXTAUTH_SECRET, ENCRYPTION_KEY
 - DB/Cache: POSTGRES_*, REDIS_PASSWORD
@@ -43,7 +43,7 @@ This stack assumes the existing NPM network is named `npm_web` on 192.168.11.0/2
 
 If your NPM network has a different name, update `docker-compose.yml` → `networks.web.external.name` to match.
 
-## 4) Build & Start
+## 4) Build & Start (no public ports)
 
 ```bash
 # From repository root
@@ -53,28 +53,21 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Services and fixed IPs on `npm_web`:
-- studio → 192.168.11.180:3000
-- api → 192.168.11.181:3000
-- gen → 192.168.11.182:3000
-- lp → 192.168.11.183:3000
-- track → 192.168.11.184:3000
-- pdf → 192.168.11.185:3000
-- assets (nginx) → 192.168.11.186:8080
+Services attach to the external NPM network (e.g., `npm_web`) and can be given fixed IPs in your environment. See `docker-compose.yml` and adjust IPs to your network.
 
 ## 5) NPM Proxy Hosts
 
-Create hosts in NPM (UI on port 81):
+Create hosts in NPM (UI on port 81), forwarding each subdomain to its corresponding container IP:PORT from your compose. Example:
 
-| Domain                | Scheme | Forward IP         | Port |
-|-----------------------|--------|--------------------|------|
-| studio.cso.ae         | http   | 192.168.11.180     | 3000 |
-| api.cso.ae            | http   | 192.168.11.181     | 3000 |
-| gen.cso.ae            | http   | 192.168.11.182     | 3000 |
-| lp.cso.ae             | http   | 192.168.11.183     | 3000 |
-| *.lp.cso.ae (wildcard)| http   | 192.168.11.183     | 3000 |
-| track.cso.ae          | http   | 192.168.11.184     | 3000 |
-| assets.cso.ae         | http   | 192.168.11.186     | 8080 |
+| Domain                        | Scheme | Forward Host (example) | Port |
+|-------------------------------|--------|-------------------------|------|
+| studio.<your-domain>          | http   | <studio-container-ip>   | 3000 |
+| api.<your-domain>             | http   | <api-container-ip>      | 3000 |
+| gen.<your-domain>             | http   | <gen-container-ip>      | 3000 |
+| lp.<your-domain>              | http   | <lp-container-ip>       | 3000 |
+| *.lp.<your-domain> (wildcard) | http   | <lp-container-ip>       | 3000 |
+| track.<your-domain>           | http   | <track-container-ip>    | 3000 |
+| assets.<your-domain>          | http   | <assets-container-ip>   | 8080 |
 
 SSL tab (each host): Force SSL, HTTP/2, HSTS. Use DNS challenge for `*.lp.cso.ae`.
 
@@ -89,26 +82,26 @@ proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 ## 6) Quick Health
 
 ```bash
-# container IPs on npm_web
-curl -s http://192.168.11.181:3000/health   # API
-curl -s http://192.168.11.185:3000/health   # PDF
+# Example health checks (replace with your container IPs)
+curl -s http://<api-container-ip>:3000/health   # API
+curl -s http://<pdf-container-ip>:3000/health   # PDF
 ```
 
 ## 7) Use the System
 
 1) Studio
-- Open https://studio.cso.ae
+- Open https://studio.<your-domain>
 - The left JSON auto-fills analytics from `.env` via `/api/env`.
 - Click "Generate" → a spec is created and rationale PDF generated.
 - Click "Publish" with a slug (e.g., `difc-corp`) → live at:
-  - https://lp.cso.ae/p/difc-corp
-  - https://difc-corp.lp.cso.ae (requires wildcard host)
+  - https://lp.<your-domain>/p/<slug>
+  - https://<slug>.lp.<your-domain> (requires wildcard host)
 
 2) Preview from spec
-- Any spec can be previewed via `https://lp.cso.ae/preview?spec=<base64 JSON>`
+- Any spec can be previewed via `https://lp.<your-domain>/preview?spec=<base64 JSON>`
 
 3) Static assets
-- Place public files under `storage/public` → served from https://assets.cso.ae/
+- Place public files under `storage/public` → served from https://assets.<your-domain>/
 
 ## 8) Analytics
 
