@@ -129,6 +129,76 @@ app.post("/api/forms/submit", async (req, res) => {
   }
 });
 
+// ---------- Data ingestion (historic campaigns / experiments) ----------
+app.post("/api/data/upload", upload.single("file"), async (req, res) => {
+  try {
+    const type = String(req.query.type || "misc"); // campaigns | experiments | misc
+    const dataDir = path.join(ROOT, "private/exports/data", type);
+    await fsp.mkdir(dataDir, { recursive: true });
+    const dest = path.join(dataDir, path.basename(req.file.path));
+    await fsp.rename(req.file.path, dest);
+    res.json({ ok: true, key: dest.replace(ROOT + "/", "") });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
+app.get("/api/data/list", async (_req, res) => {
+  try {
+    const base = path.join(ROOT, "private/exports/data");
+    await fsp.mkdir(base, { recursive: true });
+    const types = (await fsp.readdir(base, { withFileTypes: true })).filter(d => d.isDirectory()).map(d => d.name);
+    const out = {};
+    for (const t of types) {
+      const dir = path.join(base, t);
+      const files = await fsp.readdir(dir);
+      out[t] = files;
+    }
+    res.json(out);
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
+// ---------- Templates (save/load input specs) ----------
+app.post("/api/templates/save", async (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const input = req.body?.input;
+    if (!name || !input) return res.status(400).json({ error: "Missing name or input" });
+    const dir = path.join(ROOT, "private/exports/templates");
+    await fsp.mkdir(dir, { recursive: true });
+    await fsp.writeFile(path.join(dir, `${name}.json`), JSON.stringify({ input }, null, 2));
+    res.json({ ok: true, name });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
+app.get("/api/templates", async (_req, res) => {
+  try {
+    const dir = path.join(ROOT, "private/exports/templates");
+    await fsp.mkdir(dir, { recursive: true });
+    const names = (await fsp.readdir(dir)).filter(f => f.endsWith('.json')).map(f => path.basename(f, '.json'));
+    res.json({ templates: names });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
+app.get("/api/templates/:name", async (req, res) => {
+  try {
+    const name = String(req.params.name || "").trim();
+    if (!name) return res.status(400).end();
+    const file = path.join(ROOT, "private/exports/templates", `${name}.json`);
+    if (!fs.existsSync(file)) return res.status(404).end();
+    res.setHeader("Content-Type", "application/json");
+    res.send(await fsp.readFile(file, "utf8"));
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`API listening on :${PORT}`);
 });

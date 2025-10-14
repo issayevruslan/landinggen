@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const pdfRes = await fetch(`${pdfUrl}/rationale`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ spec: gen.spec, insights: { kpis: input.primaryConversionKpi, audience: input.targetAudienceDescription } })
+    body: JSON.stringify({ spec: gen.spec, insights: gen.insights || { kpis: input.primaryConversionKpi, audience: input.targetAudienceDescription } })
   });
   const pdf = await pdfRes.json();
 

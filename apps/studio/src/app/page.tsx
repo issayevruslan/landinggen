@@ -80,35 +80,40 @@ export default function Studio() {
   const liveWildcard = slug ? `https://${slug}.lp.cso.ae` : null;
 
   return (
-    <main style={{ padding: 24, maxWidth: 1000, margin: "0 auto" }}>
-      <h1>CSO Studio</h1>
-      <p>Paste or edit the input JSON, then generate a page spec + rationale PDF.</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <section>
+    <main>
+      <p className="kv">Paste or edit the input JSON, upload datasets, then generate a spec + rationale PDF.</p>
+      <div className="card" style={{ marginBottom: 12 }}>
+        <DataUpload />
+      </div>
+      <div className="grid-two">
+        <section className="card">
           <h3>Input</h3>
-          <textarea value={input} onChange={e => setInput(e.target.value)} style={{ width: '100%', height: 480, fontFamily: 'monospace', fontSize: 12 }} />
-          <button onClick={onGenerate} disabled={loading} style={{ marginTop: 12 }}>
-            {loading ? "Generating..." : "Generate"}
-          </button>
-          {result?.spec && (
-            <div style={{ marginTop: 12 }}>
-              <label>Slug:&nbsp;<input value={slug} onChange={e => setSlug(e.target.value)} placeholder="campaign-slug" /></label>
-              <button onClick={onPublish} style={{ marginLeft: 8 }}>Publish</button>
-              {publishRes?.ok && (
-                <div style={{ marginTop: 8, display: 'flex', gap: 8, flexDirection: 'column' }}>
-                  <a target="_blank" href={liveUrl!}>Live URL</a>
-                  <a target="_blank" href={liveWildcard!}>Wildcard URL</a>
-                </div>
-              )}
-            </div>
-          )}
+          <textarea value={input} onChange={e => setInput(e.target.value)} style={{ height: 520, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontSize: 12 }} />
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
+            <button onClick={onGenerate} disabled={loading}>
+              {loading ? "Generating..." : "Generate"}
+            </button>
+            {result?.spec && (
+              <>
+                <input value={slug} onChange={e => setSlug(e.target.value)} placeholder="campaign-slug" style={{ width: 240 }} />
+                <button className="secondary" onClick={onPublish}>Publish</button>
+                {publishRes?.ok && (
+                  <div className="kv" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span>Published →</span>
+                    <a className="button secondary" target="_blank" href={liveUrl!}>Live URL</a>
+                    <a className="button secondary" target="_blank" href={liveWildcard!}>Wildcard</a>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </section>
-        <section>
+        <section className="card">
           <h3>Result</h3>
-          <pre style={{ background: '#f5f5f5', padding: 12, height: 440, overflow: 'auto' }}>{result ? JSON.stringify(result, null, 2) : ""}</pre>
+          <pre style={{ background: '#0f1017', border: '1px solid var(--border)', borderRadius: 8, padding: 12, height: 480, overflow: 'auto' }}>{result ? JSON.stringify(result, null, 2) : ""}</pre>
           {result?.spec && (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <a
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+              <a className="button secondary"
                 target="_blank"
                 href={`/preview?spec=${encodeURIComponent(
                   typeof window === 'undefined'
@@ -118,12 +123,89 @@ export default function Studio() {
               >
                 Preview
               </a>
-              {result?.pdf?.key && <a target="_blank" href={`/api/pdf?key=${encodeURIComponent(result.pdf.key)}`}>Download Rationale PDF</a>}
+              {result?.pdf?.key && <a className="button secondary" target="_blank" href={`/api/pdf?key=${encodeURIComponent(result.pdf.key)}`}>Rationale PDF</a>}
+              <RefineSectionUI onRefine={async (section, prompt) => {
+                const res = await fetch('/api/refine', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ section, prompt }) });
+                const data = await res.json();
+                if (data?.result) {
+                  try {
+                    const spec = { ...(result.spec || {}) };
+                    const idx = (spec.sections || []).findIndex((s: any) => s.type === section);
+                    if (idx >= 0) spec.sections[idx] = { ...(spec.sections[idx] || {}), data: { ...(spec.sections[idx]?.data || {}), refined: data.result } };
+                    setResult({ ...result, spec });
+                  } catch {}
+                }
+              }} />
+              <TemplateControls currentInput={input} onLoadTemplate={async (name) => {
+                const t = await fetch(`/api/templates/${encodeURIComponent(name)}`).then(r => r.json());
+                if (t?.input) setInput(JSON.stringify(t.input, null, 2));
+              }} onSaveTemplate={async (name) => {
+                await fetch('/api/templates/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, input: JSON.parse(input) }) });
+              }} />
             </div>
           )}
         </section>
       </div>
     </main>
+  );
+}
+
+function RefineSectionUI({ onRefine }: { onRefine: (section: string, prompt: string) => Promise<void> }) {
+  const [section, setSection] = useState('hero');
+  const [prompt, setPrompt] = useState('Make the hero headline emphasize DIFC setup benefits for CFOs.');
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <select value={section} onChange={e => setSection(e.target.value)}>
+        <option value="hero">hero</option>
+        <option value="features">features</option>
+        <option value="benefits">benefits</option>
+        <option value="testimonials">testimonials</option>
+        <option value="cta">cta</option>
+        <option value="form">form</option>
+      </select>
+      <input value={prompt} onChange={e => setPrompt(e.target.value)} style={{ width: 360 }} />
+      <button onClick={() => onRefine(section, prompt)}>Refine</button>
+    </div>
+  );
+}
+
+function TemplateControls({ currentInput, onLoadTemplate, onSaveTemplate }: { currentInput: string; onLoadTemplate: (name: string) => Promise<void>; onSaveTemplate: (name: string) => Promise<void>; }) {
+  const [templates, setTemplates] = useState<string[]>([]);
+  const [name, setName] = useState('my-template');
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <button onClick={async () => { const t = await fetch('/api/templates').then(r => r.json()); setTemplates(t?.templates || []); }}>List Templates</button>
+      <select onChange={e => onLoadTemplate(e.target.value)}>
+        <option value="">Load…</option>
+        {templates.map(t => <option key={t} value={t}>{t}</option>)}
+      </select>
+      <input value={name} onChange={e => setName(e.target.value)} placeholder="template-name" />
+      <button onClick={() => onSaveTemplate(name)}>Save as Template</button>
+    </div>
+  );
+}
+
+function DataUpload() {
+  async function onUpload(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    const fd = new FormData(form);
+    const type = (form.querySelector('select[name=type]') as HTMLSelectElement).value;
+    await fetch(`/api/data/upload?type=${encodeURIComponent(type)}`, { method: 'POST', body: fd });
+    alert('Uploaded');
+  }
+  return (
+    <form onSubmit={onUpload} style={{ marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+      <label>Type
+        <select name="type" defaultValue="campaigns">
+          <option value="campaigns">Campaigns</option>
+          <option value="experiments">Experiments</option>
+          <option value="misc">Misc</option>
+        </select>
+      </label>
+      <input type="file" name="file" required />
+      <button type="submit">Upload Dataset</button>
+    </form>
   );
 }
 

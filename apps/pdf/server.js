@@ -37,7 +37,30 @@ app.post("/rationale", async (req, res) => {
   });
 
   doc.fontSize(14).text("Insights Used");
-  doc.fontSize(10).text(JSON.stringify(insights || {}, null, 2));
+  if (insights) {
+    if (Array.isArray(insights.topHeadlines) && insights.topHeadlines.length) {
+      doc.fontSize(12).text("Top Headlines by Conversion:");
+      insights.topHeadlines.forEach((h, i) => doc.fontSize(10).text(`${i + 1}. ${h}`));
+      doc.moveDown();
+    }
+    if (Array.isArray(insights.topCtas) && insights.topCtas.length) {
+      doc.fontSize(12).text("Top CTAs by Conversion:");
+      insights.topCtas.forEach((c, i) => doc.fontSize(10).text(`${i + 1}. ${c}`));
+      doc.moveDown();
+    }
+    if (Array.isArray(insights.bestByDevice) && insights.bestByDevice.length) {
+      doc.fontSize(12).text("Best Performing by Device:");
+      insights.bestByDevice.forEach((r) => doc.fontSize(10).text(`${r.device}: ${r.metric}`));
+      doc.moveDown();
+    }
+    if (Array.isArray(insights.bestByChannel) && insights.bestByChannel.length) {
+      doc.fontSize(12).text("Best Performing by Channel:");
+      insights.bestByChannel.forEach((r) => doc.fontSize(10).text(`${r.channel}: ${r.metric}`));
+      doc.moveDown();
+    }
+  } else {
+    doc.fontSize(10).text("No insights attached.");
+  }
 
   doc.end();
   stream.on("finish", () => {
