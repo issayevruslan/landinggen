@@ -139,9 +139,7 @@ docker exec -t $(docker ps -qf name=_db_) \
 
 Files:
 ```bash
-rsync -a /home/ubuntu/docker/landinggen/storage/ /opt/backups/cso-storage/
+rsync -a /path/to/storage/ /opt/backups/your-storage/
 ```
 
 ---
-
-For deeper details, see `description.md` in this repo.
