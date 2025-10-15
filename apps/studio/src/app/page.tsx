@@ -137,10 +137,15 @@ export default function Studio() {
                 }
               }} />
               <TemplateControls currentInput={input} onLoadTemplate={async (name) => {
-                const t = await fetch(`/api/templates/${encodeURIComponent(name)}`).then(r => r.json());
-                if (t?.input) setInput(JSON.stringify(t.input, null, 2));
+                const spec = await fetch(`/api/templates/${encodeURIComponent(name)}`).then(r => r.json());
+                if (spec) setResult({ spec });
+                try {
+                  const current = JSON.parse(input);
+                  const merged = { ...current, ...spec };
+                  setInput(JSON.stringify(merged, null, 2));
+                } catch {}
               }} onSaveTemplate={async (name) => {
-                await fetch('/api/templates/save', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, input: JSON.parse(input) }) });
+                await fetch(`/api/templates/${encodeURIComponent(name)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ spec: result?.spec || JSON.parse(input) }) });
               }} />
             </div>
           )}

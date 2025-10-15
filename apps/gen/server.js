@@ -163,6 +163,11 @@ app.post("/generate", async (req, res) => {
   }
 });
 
+// simple health endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('ok');
+});
+
 // Section-only refine placeholder
 app.post("/refine/:section", async (req, res) => {
   const section = req.params.section;
