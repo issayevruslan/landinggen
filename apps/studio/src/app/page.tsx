@@ -188,9 +188,19 @@ function TemplateControls({ currentInput, onLoadTemplate, onSaveTemplate }: { cu
       <input value={name} onChange={e => setName(e.target.value)} placeholder="template-name" />
       <button onClick={async () => {
         try {
-          await onSaveTemplate(name);
-          alert('Template saved');
-          try { const t = await fetch('/api/templates').then(r => r.json()); setTemplates(t?.templates || []); } catch {}
+          if (!name) return alert('Enter a template name');
+          const res = await fetch(`/api/templates/${encodeURIComponent(name)}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ spec: JSON.parse(currentInput) })
+          });
+          if (res.ok) {
+            alert('Template saved');
+            try { const t = await fetch('/api/templates').then(r => r.json()); setTemplates(t?.templates || []); } catch {}
+          } else {
+            const txt = await res.text();
+            alert('Save failed: ' + txt);
+          }
         } catch (e) {
           alert('Failed to save template: ' + String(e));
         }
