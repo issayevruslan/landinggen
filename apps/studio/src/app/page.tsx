@@ -88,7 +88,45 @@ export default function Studio() {
       <div className="grid-two">
         <section className="card">
           <h3>Input</h3>
-          <textarea value={input} onChange={e => setInput(e.target.value)} style={{ height: 520, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontSize: 12 }} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            <div>
+              <label>Objective
+                <select value={JSON.parse(input).campaignObjective || ''} onChange={e => {
+                  const obj = JSON.parse(input); obj.campaignObjective = e.target.value; setInput(JSON.stringify(obj, null, 2));
+                }}>
+                  <option value="lead_gen">Lead gen</option>
+                  <option value="sales">Sales</option>
+                  <option value="signup">Signup</option>
+                </select>
+              </label>
+            </div>
+            <div>
+              <label>Primary KPI
+                <input value={JSON.parse(input).primaryConversionKpi || ''} onChange={e => { const obj = JSON.parse(input); obj.primaryConversionKpi = e.target.value; setInput(JSON.stringify(obj, null, 2)); }} />
+              </label>
+            </div>
+            <div style={{ gridColumn: '1 / span 2' }}>
+              <label>Target Audience
+                <input value={JSON.parse(input).targetAudienceDescription || ''} onChange={e => { const obj = JSON.parse(input); obj.targetAudienceDescription = e.target.value; setInput(JSON.stringify(obj, null, 2)); }} />
+              </label>
+            </div>
+            <div>
+              <label>Product / Service
+                <input value={JSON.parse(input).productOrServiceName || ''} onChange={e => { const obj = JSON.parse(input); obj.productOrServiceName = e.target.value; setInput(JSON.stringify(obj, null, 2)); }} />
+              </label>
+            </div>
+            <div>
+              <label>Primary Offer
+                <input value={JSON.parse(input).primaryOffer || ''} onChange={e => { const obj = JSON.parse(input); obj.primaryOffer = e.target.value; setInput(JSON.stringify(obj, null, 2)); }} />
+              </label>
+            </div>
+            <div style={{ gridColumn: '1 / span 2' }}>
+              <label>UVP
+                <input value={JSON.parse(input).uniqueValueProposition || ''} onChange={e => { const obj = JSON.parse(input); obj.uniqueValueProposition = e.target.value; setInput(JSON.stringify(obj, null, 2)); }} />
+              </label>
+            </div>
+          </div>
+          <textarea value={input} onChange={e => setInput(e.target.value)} style={{ height: 320, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontSize: 12 }} />
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
             <button onClick={onGenerate} disabled={loading}>
               {loading ? "Generating..." : "Generate"}
