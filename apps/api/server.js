@@ -199,6 +199,22 @@ app.get("/api/templates/:name", async (req, res) => {
   }
 });
 
+// Save template by name (accepts {spec} or {input})
+app.post("/api/templates/:name", async (req, res) => {
+  try {
+    const name = String(req.params.name || "").trim();
+    const payload = req.body || {};
+    if (!name) return res.status(400).json({ error: "Missing name" });
+    const dir = path.join(ROOT, "private/exports/templates");
+    await fsp.mkdir(dir, { recursive: true });
+    const content = payload.spec ? payload : { input: payload.input || payload };
+    await fsp.writeFile(path.join(dir, `${name}.json`), JSON.stringify(content, null, 2));
+    res.json({ ok: true, name });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`API listening on :${PORT}`);
 });
