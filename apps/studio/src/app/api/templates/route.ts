@@ -8,8 +8,13 @@ export async function GET() {
       const body = await r.text();
       return NextResponse.json({ error: `API error ${r.status}`, body }, { status: 502 });
     }
-    const list = await r.json();
-    return NextResponse.json({ templates: Array.isArray(list) ? list : [] });
+    const payload = await r.json();
+    const templates = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.templates)
+      ? payload.templates
+      : [];
+    return NextResponse.json({ templates });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || String(e) }, { status: 500 });
   }
