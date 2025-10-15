@@ -174,13 +174,27 @@ function TemplateControls({ currentInput, onLoadTemplate, onSaveTemplate }: { cu
   const [name, setName] = useState('my-template');
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-      <button onClick={async () => { const t = await fetch('/api/templates').then(r => r.json()); setTemplates(t?.templates || []); }}>List Templates</button>
+      <button onClick={async () => {
+        try {
+          const t = await fetch('/api/templates').then(r => r.json());
+          setTemplates(t?.templates || []);
+          if (!t?.templates?.length) alert('No templates yet. Use "Save as Template" to create one.');
+        } catch (e) { alert('Failed to list templates: ' + String(e)); }
+      }}>List Templates</button>
       <select onChange={e => onLoadTemplate(e.target.value)}>
         <option value="">Load…</option>
         {templates.map(t => <option key={t} value={t}>{t}</option>)}
       </select>
       <input value={name} onChange={e => setName(e.target.value)} placeholder="template-name" />
-      <button onClick={() => onSaveTemplate(name)}>Save as Template</button>
+      <button onClick={async () => {
+        try {
+          await onSaveTemplate(name);
+          alert('Template saved');
+          try { const t = await fetch('/api/templates').then(r => r.json()); setTemplates(t?.templates || []); } catch {}
+        } catch (e) {
+          alert('Failed to save template: ' + String(e));
+        }
+      }}>Save as Template</button>
     </div>
   );
 }
